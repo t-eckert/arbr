@@ -1,12 +1,23 @@
-#[macro_use]
 extern crate rocket;
 
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
+use rocket::fs::NamedFile;
+use std::path::PathBuf;
+
+
+#[rocket::get("/<path..>")]
+async fn serve(path: PathBuf) -> Option<NamedFile> {
+
+    let root = PathBuf::from("/home/thomaseckert/Notebook/");
+    let mut path = root.join(path);
+    if path.is_dir() {
+        path.push("README.md");
+    }
+
+    println!("{:?}", path);
+    NamedFile::open(path).await.ok()
 }
 
-#[launch]
+#[rocket::launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![index])
+    rocket::build().mount("/", rocket::routes![serve])
 }
